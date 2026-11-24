@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LABRIOT UTFPR — Cidadania Digital na Prática</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
   <header class="topbar">
@@ -15,8 +13,9 @@
       <h1>Portal de Cidadania Digital</h1>
     </div>
     <div class="topbar-actions">
-      <button id="btn-home" class="btn-outline" onclick="goHome()" style="display:none;">← Voltar às Aulas</button>
-      <span class="station-tag" id="station-label" onclick="setStation()" title="Clique para definir o número do computador">Bancada #1</span>
+      <button id="btn-home" class="btn-outline" onclick="goHome()" style="display:none;">← Voltar aos Blocos</button>
+      <span id="pair-badge" class="pair-chip" onclick="focusPairInput()" title="Dupla ativa nesta bancada" style="display:none;">👥 Dupla não informada</span>
+      <button class="station-tag" id="station-label" onclick="openTeacherModal()" title="Configurar bancada, travar bloco e ver entregas das duplas">⚙️ Bancada #1</button>
     </div>
   </header>
 
@@ -24,9 +23,11 @@
     <!-- Conteúdo renderizado dinamicamente pelo app.js -->
   </main>
 
+  <div id="modal-root"></div>
+
   <footer class="footer">
     <span>LABRIOT — Laboratório de Robótica, IoT e IA | UTFPR Ponta Grossa</span>
-    <span>Material licenciado sob CC BY-NC-SA 4.0</span>
+    <span>Uso em bancada para duplas (funciona offline) • CC BY-NC-SA 4.0</span>
   </footer>
 
   <script src="data.js"></script>
