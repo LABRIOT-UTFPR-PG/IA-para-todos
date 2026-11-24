@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LABRIOT UTFPR — Cidadania Digital na Prática</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="badge-lab">LABRIOT — UTFPR</div>
+      <h1>Portal de Cidadania Digital</h1>
+    </div>
+    <div class="topbar-actions">
+      <button id="btn-home" class="btn-outline" onclick="goHome()" style="display:none;">← Voltar às Aulas</button>
+      <span class="station-tag" id="station-label" onclick="setStation()" title="Clique para definir o número do computador">Bancada #1</span>
+    </div>
+  </header>
+
+  <main id="app" class="container">
+    <!-- Conteúdo renderizado dinamicamente pelo app.js -->
+  </main>
+
+  <footer class="footer">
+    <span>LABRIOT — Laboratório de Robótica, IoT e IA | UTFPR Ponta Grossa</span>
+    <span>Material licenciado sob CC BY-NC-SA 4.0</span>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
