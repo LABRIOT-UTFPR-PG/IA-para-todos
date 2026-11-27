@@ -359,30 +359,38 @@ const LESSONS_DATA = {
     {
       id: "df2",
       type: "photo",
-      title: "Caso 2: Foto do 'Cachorro Azul Descoberto na Floresta'",
-      description: "Uma imagem viralizou afirmando que cientistas encontraram uma nova espécie de cachorro naturalmente azul neon.",
-      imageSummary: "🖼️ Imagem analisada: Cachorro sentado na grama sob sol forte, pelagem azul brilhante.",
+      image: "Gemini_Generated_Image_y08siy08siy08siy.jpg",
+      title: "Caso 2: Foto do 'Cachorro Raro com 3 Orelhas'",
+      description: "Uma imagem circula nas redes afirmando que nasceu um Golden Retriever raríssimo com três orelhas em um parque.",
+      imageSummary: "🖼️ Imagem analisada: Golden Retriever sentado na grama de um parque ensolarado.",
       clues: [
         {
           id: "c1",
-          label: "Luz e Sombras: O sol bate pela direita, mas a sombra do cachorro está projetada para a frente.",
-          shortTag: "Sombra incoerente",
+          label: "Anatomia Impossível: Há uma terceira orelha apontando para cima no meio da cabeça.",
+          shortTag: "Terceira orelha no topo da cabeça",
           isFakeClue: true,
-          explanation: "Boa observação! Sombras que não batem com a posição do sol entregam montagens e imagens de IA."
+          explanation: "Perfeito! Cães têm apenas duas orelhas laterais — membros ou orelhas extras são erros clássicos de imagens geradas por IA."
         },
         {
           id: "c2",
-          label: "Patas e Detalhes: Uma das patas traseiras se mistura com a grama e tem 6 dedos.",
-          shortTag: "Pata com 6 dedos",
+          label: "Fusão de Pelos na Testa: A base da orelha extra se mistura aos pelos da cabeça sem marca de recorte.",
+          shortTag: "Base da orelha fundida nos pelos",
           isFakeClue: true,
-          explanation: "Perfeito! Anatomia estranha em mãos, patas, dentes e fundos é marca registrada de geradores de imagem."
+          explanation: "Boa observação! A IA cria texturas de pelo e luz tão convincentes que 'costura' partes impossíveis sem deixar borda de montagem."
         },
         {
           id: "c3",
-          label: "Grama Verde: O chão tem grama verde comum.",
-          shortTag: "Grama verde",
+          label: "Coleira Azul: O cachorro usa uma coleira azul com plaquinha no pescoço.",
+          shortTag: "Coleira azul no pescoço",
           isFakeClue: false,
-          explanation: "Pista neutra! Grama verde é normal em qualquer foto ao ar livre."
+          explanation: "Pista neutra! Coleira com plaquinha é comum em qualquer foto real de cachorro."
+        },
+        {
+          id: "c4",
+          label: "Grama e Fundo Desfocado: O parque tem grama verde e árvores desfocadas ao fundo.",
+          shortTag: "Grama verde no parque",
+          isFakeClue: false,
+          explanation: "Pista neutra! Fundo desfocado (modo retrato) e grama verde são normais em fotos comuns."
         }
       ]
     },

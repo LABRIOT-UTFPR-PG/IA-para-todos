@@ -1,4 +1,4 @@
-﻿const STORAGE_KEYS = {
+const STORAGE_KEYS = {
   STATION: 'labriot_station_v2',
   LOCKED_BLOCK: 'labriot_locked_block_v2',
   STATE: 'labriot_state_v2',
@@ -313,6 +313,7 @@ function getGameRounds() {
     return {
       kind: 'DEEPFAKE',
       icon: df.type === 'video' ? '🎥' : df.type === 'photo' ? '🖼️' : '🎙️',
+      image: df.image || null,
       title: df.title.replace(/^Caso \d+: /, ''),
       prompt: 'Qual detalhe é uma pista de possível manipulação?',
       context: df.description,
@@ -420,6 +421,7 @@ function renderGame() {
         </div>
         <h3>${escapeHtml(round.title)}</h3>
         <p class="game-context">${escapeHtml(round.context)}</p>
+        ${round.image ? `<img src="${escapeHtml(round.image)}" alt="${escapeHtml(round.title)}" class="game-case-img" />` : ''}
         <h4>${escapeHtml(round.prompt)}</h4>
         <div class="game-options">
           ${round.options.map((option, index) => {
@@ -1207,40 +1209,35 @@ function renderDeepfakeSvg(df) {
   }
 
   if (df.type === 'photo') {
+    const hotspots = [
+      { id: 'c1', label: '3ª orelha', isFake: true, style: 'left:45.5%; top:4%; width:9.5%; height:17%;' },
+      { id: 'c2', label: 'Base fundida', isFake: true, style: 'left:44.5%; top:21%; width:11.5%; height:9%;' },
+      { id: 'c3', label: 'Coleira', isFake: false, style: 'left:46%; top:43%; width:8.5%; height:8.5%;' },
+      { id: 'c4', label: 'Grama', isFake: false, style: 'left:10%; top:72%; width:22%; height:18%;' }
+    ];
+
     return `
       <div class="svg-stage ${xray}">
-        <svg viewBox="0 0 360 230" class="df-svg" role="img" aria-label="Simulação interativa de foto suspeita do cachorro azul">
-          <defs>
-            <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#87ceeb" />
-              <stop offset="100%" stop-color="#d8f0ff" />
-            </linearGradient>
-          </defs>
-          <rect x="0" y="0" width="360" height="150" rx="10" fill="url(#skyGrad)" />
-          <!-- Grama (c3) -->
-          <rect x="0" y="135" width="360" height="95" rx="8" fill="#4f9d4a" class="svg-hotspot" onclick="checkDfClue('df2_c3')" />
-          <!-- Sol à direita -->
-          <circle cx="310" cy="40" r="22" fill="#ffdd33" />
-          <text x="310" y="74" text-anchor="middle" fill="#433628" font-size="9" font-weight="800">☀️ SOL AQUI</text>
-          <!-- Sombra incoerente para a frente-direita (c1) -->
-          <g class="svg-hotspot" onclick="checkDfClue('df2_c1')">
-            <ellipse cx="220" cy="182" rx="68" ry="16" fill="rgba(0,0,0,0.38)" stroke="${isFound('c1') ? '#22c55e' : (d.dfXrayMode ? '#ffcc00' : 'transparent')}" stroke-width="2.5" />
-            <text x="242" y="206" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="800">↘️ Sombra aponta para o lado errado!</text>
-          </g>
-          <!-- Cachorro Azul -->
-          <ellipse cx="165" cy="145" rx="44" ry="28" fill="#1e90ff" />
-          <circle cx="132" cy="108" r="24" fill="#259dff" />
-          <ellipse cx="115" cy="102" rx="8" ry="16" fill="#0d5bb5" />
-          <circle cx="125" cy="104" r="3.2" fill="#111" />
-          <circle cx="114" cy="112" r="4" fill="#111" />
-          <!-- Pata traseira estranha com 6 dedos (c2) -->
-          <g class="svg-hotspot" onclick="checkDfClue('df2_c2')">
-            <circle cx="195" cy="166" r="20" fill="rgba(255,255,255,0.22)" stroke="${isFound('c2') ? '#22c55e' : (d.dfXrayMode ? '#ffcc00' : '#fff')}" stroke-width="2" stroke-dasharray="3 2" />
-            <path d="M182 172 L185 162 M187 174 L189 162 M192 174 L193 162 M197 174 L197 162 M202 173 L201 162 M207 171 L205 163" stroke="#104e9e" stroke-width="2.6" stroke-linecap="round" />
-            <text x="195" y="196" text-anchor="middle" fill="#fff9db" font-size="9" font-weight="800">🐾 6 dedos na grama</text>
-          </g>
-        </svg>
-        <div class="svg-hint">💡 Observem o sol, a sombra e os detalhes das patas!</div>
+        <div class="photo-inspector">
+          <img src="${escapeHtml(df.image)}" alt="${escapeHtml(df.title)}" class="df-photo" />
+          ${hotspots.map(hs => {
+            const clicked = isFound(hs.id);
+            const stateCls = clicked ? (hs.isFake ? 'hit-fake' : 'hit-neutral') : '';
+            return `
+              <button
+                type="button"
+                class="photo-hotspot ${stateCls}"
+                style="${hs.style}"
+                onclick="checkDfClue('${df.id}_${hs.id}')"
+                title="Inspecionar: ${hs.label}"
+                aria-label="Inspecionar ${hs.label}"
+              >
+                ${(d.dfXrayMode || clicked) ? `<span class="photo-hotspot-tag">${clicked ? (hs.isFake ? '✅ ' : '❌ ') : ''}${hs.label}</span>` : ''}
+              </button>
+            `;
+          }).join('')}
+        </div>
+        <div class="svg-hint">💡 Cliquem direto nos pontos suspeitos da foto (ou nos cartões ao lado)!</div>
       </div>
     `;
   }
