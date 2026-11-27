@@ -15,12 +15,13 @@ Aplicação web estática (HTML, CSS e JavaScript puro) projetada para rodar em 
   - **Bloco 02**: Termos de Uso com cronômetro real, marcação interativa de cláusulas armadilha, 3 missões LGPD com checklist e modelo de apoio, e cartaz imprimível com os nomes da dupla.
   - **Bloco 03**: Laboratório Raio-X de Deepfakes com painéis visuais SVG interativos (vídeo, foto e áudio clonado) + modo de ajuda Raio-X.
   - **Bloco 04**: 3 casos no Método SIFT offline (com rastreamento das 4 abas investigadas) + gerador de cartão de campanha imprimível.
+- **Jogo rápido “Detetives da Verdade”**: 6 rodadas de múltipla escolha misturando pistas de deepfake e verificação de notícias, com pontuação, sequência de acertos e feedback imediato. O jogo pode ser reiniciado e funciona offline.
 
 ## Estrutura de Arquivos
 - `index.html`: Estrutura principal, cabeçalho institucional LABRIOT / UTFPR e container de modal.
 - `style.css`: Identidade visual (marrom escuro, amarelo UTFPR e fundo claro) + suporte a impressão dos cartazes e campanhas gerados pelas duplas.
 - `data.js`: Banco de conteúdo dos 4 blocos (apps, casos de metadados, cláusulas, missões LGPD, casos de Deepfake e notícias SIFT).
-- `app.js`: Lógica das estações, persistência local, painéis SVG interativos, verificadores e painel do professor.
+- `app.js`: Lógica das estações, persistência local, jogo de fake news e deepfakes, painéis SVG interativos, verificadores e painel do professor.
 - `vercel.json`: Configuração de deploy estático na Vercel.
 
 ## Como subir na Vercel

@@ -1,4 +1,4 @@
-const STORAGE_KEYS = {
+﻿const STORAGE_KEYS = {
   STATION: 'labriot_station_v2',
   LOCKED_BLOCK: 'labriot_locked_block_v2',
   STATE: 'labriot_state_v2',
@@ -44,7 +44,12 @@ function createDefaultLessonState() {
     campTarget: 'Família no WhatsApp',
     campFormat: 'Cartaz no mural da escola',
     campMessage: '',
-    campDone: false
+    campDone: false,
+    // Jogo rápido
+    gameIndex: 0,
+    gameScore: 0,
+    gameStreak: 0,
+    gameAnswers: []
   };
 }
 
@@ -163,7 +168,7 @@ function updateTopbar() {
 
   const p1 = runtime.data.pair1.trim();
   const p2 = runtime.data.pair2.trim();
-  if (runtime.view !== 'home' || p1 || p2) {
+  if (runtime.view !== 'jogo' && (runtime.view !== 'home' || p1 || p2)) {
     pairBadge.style.display = 'inline-block';
     if (p1 && p2) {
       pairBadge.textContent = `👥 ${p1} & ${p2}`;
@@ -248,6 +253,8 @@ function render() {
     app.innerHTML = renderAula3();
   } else if (runtime.view === 'aula4') {
     app.innerHTML = renderAula4();
+  } else if (runtime.view === 'jogo') {
+    app.innerHTML = renderGame();
   }
   renderModal();
 }
@@ -268,6 +275,15 @@ function renderHome() {
       </div>
     </section>
 
+    <section class="game-promo">
+      <div class="game-promo-copy">
+        <span class="game-eyebrow">🎮 DESAFIO RÁPIDO • 6 RODADAS</span>
+        <h2>Detetives da Verdade</h2>
+        <p>Fake news ou deepfake? Investigue pistas, escolha seu veredito e some pontos.</p>
+      </div>
+      <button class="game-start-btn" onclick="startGame()">Jogar agora <span aria-hidden="true">→</span></button>
+    </section>
+
     <div class="grid-lessons">
       ${LESSONS_META.map(lesson => `
         <div class="lesson-card ${lesson.highlight ? 'highlight' : ''}">
@@ -282,6 +298,184 @@ function renderHome() {
       `).join('')}
     </div>
   `;
+}
+
+function getGameRounds() {
+  const deepfakeRounds = LESSONS_DATA.deepfakeCases.map(df => {
+    const clue = df.clues.find(item => item.isFakeClue);
+    const decoys = df.clues.filter(item => !item.isFakeClue);
+    const options = [
+      { label: clue.shortTag, correct: true },
+      ...decoys.map(item => ({ label: item.shortTag, correct: false })),
+      { label: 'O número de curtidas da publicação', correct: false }
+    ].slice(0, 3);
+
+    return {
+      kind: 'DEEPFAKE',
+      icon: df.type === 'video' ? '🎥' : df.type === 'photo' ? '🖼️' : '🎙️',
+      title: df.title.replace(/^Caso \d+: /, ''),
+      prompt: 'Qual detalhe é uma pista de possível manipulação?',
+      context: df.description,
+      options,
+      correctLabel: clue.shortTag,
+      explanation: clue.explanation.replace(/^(?:Acertou|Exato|Muito bem|Boa observação|Perfeito|Excelente|Isso mesmo)!\s*/i, '')
+    };
+  });
+  const newsRounds = LESSONS_DATA.siftCases.map(sc => ({
+    kind: 'FAKE NEWS',
+    icon: '🗞️',
+    title: 'Chegou no grupo. E agora?',
+    prompt: 'Qual é o melhor veredito para esta notícia?',
+    context: sc.headline,
+    options: ['Falso', 'Fora de Contexto', 'Meio Verdadeiro', 'Verdadeiro']
+      .map(label => ({ label, correct: label === sc.expectedVerdict })),
+    correctLabel: sc.expectedVerdict,
+    explanation: sc.explanation
+  }));
+
+  return deepfakeRounds.flatMap((round, index) => [round, newsRounds[index]]);
+}
+
+function startGame() {
+  runtime.data.gameIndex = 0;
+  runtime.data.gameScore = 0;
+  runtime.data.gameStreak = 0;
+  runtime.data.gameAnswers = [];
+  runtime.view = 'jogo';
+  runtime.subStep = 0;
+  saveState();
+  updateTopbar();
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Premiação: edite aqui o mínimo de acertos e o texto do prêmio de cada medalha.
+const PRIZE_TIERS = [
+  { min: 6, img: 'assets/medalha-ouro.svg', name: 'Medalha de Ouro', prize: 'Prêmio máximo! Retire com o professor.' },
+  { min: 5, img: 'assets/medalha-prata.svg', name: 'Medalha de Prata', prize: 'Retire seu prêmio com o professor.' },
+  { min: 3, img: 'assets/medalha-bronze.svg', name: 'Medalha de Bronze', prize: 'Retire seu prêmio com o professor.' }
+];
+
+function renderPrize(correct, total, score) {
+  const tier = PRIZE_TIERS.find(t => correct >= t.min);
+  if (!tier) {
+    return `<div class="prize-card prize-none"><p>Quase lá! Acerte pelo menos ${PRIZE_TIERS[PRIZE_TIERS.length - 1].min} para ganhar uma medalha. Jogue de novo!</p></div>`;
+  }
+  const names = [runtime.data.pair1.trim(), runtime.data.pair2.trim()].filter(Boolean).map(escapeHtml).join(' & ') || 'Dupla';
+  return `
+    <div class="prize-card">
+      <img src="${tier.img}" alt="${tier.name}" class="prize-img" onerror="this.style.display='none'">
+      <span class="game-eyebrow">🎁 VALE-PRÊMIO</span>
+      <h3>${tier.name}</h3>
+      <p><strong>${names}</strong> — ${correct}/${total} acertos · ${score} pontos</p>
+      <p class="prize-note">${tier.prize}<br>Mostre esta tela ao professor.</p>
+    </div>`;
+}
+
+function renderGame() {
+  const rounds = getGameRounds();
+  const d = runtime.data;
+  const total = rounds.length;
+
+  if (d.gameIndex >= total) {
+    const correctCount = d.gameAnswers.filter(answer => answer.correct).length;
+    return `
+      <section class="game-screen game-results">
+        ${renderPrize(correctCount, total, d.gameScore)}
+        <div class="game-result-icon">${correctCount === total ? '🏆' : '🎉'}</div>
+        <span class="game-eyebrow">FIM DE JOGO</span>
+        <h2>${correctCount === total ? 'Detetives imbatíveis!' : 'Boa investigação!'}</h2>
+        <p>Você acertou <strong>${correctCount} de ${total}</strong> rodadas e marcou <strong>${d.gameScore} pontos</strong>.</p>
+        <div class="game-result-actions">
+          <button class="game-start-btn" onclick="startGame()">Jogar de novo ↻</button>
+          <button class="btn-outline-dark" onclick="goHome()">Voltar aos blocos</button>
+        </div>
+      </section>
+    `;
+  }
+
+  const round = rounds[d.gameIndex];
+  const answer = d.gameAnswers[d.gameIndex];
+  const progress = Math.round((d.gameIndex / total) * 100);
+
+  return `
+    <section class="game-screen">
+      <div class="game-heading">
+        <div>
+          <span class="game-eyebrow">🎮 DETETIVES DA VERDADE</span>
+          <h2>Desvende antes de compartilhar</h2>
+        </div>
+        <div class="game-scoreboard">
+          <span>⭐ <strong>${d.gameScore}</strong> pontos</span>
+          <span>🔥 <strong>${d.gameStreak}</strong> sequência</span>
+        </div>
+      </div>
+      <div class="game-progress-label"><span>Rodada ${d.gameIndex + 1} de ${total}</span><span>${progress}%</span></div>
+      <div class="game-progress-track"><div style="width:${progress}%"></div></div>
+
+      <article class="game-case">
+        <div class="game-case-top">
+          <span class="game-type">${round.icon} ${round.kind}</span>
+          <span class="game-case-number">CASO 0${d.gameIndex + 1}</span>
+        </div>
+        <h3>${escapeHtml(round.title)}</h3>
+        <p class="game-context">${escapeHtml(round.context)}</p>
+        <h4>${escapeHtml(round.prompt)}</h4>
+        <div class="game-options">
+          ${round.options.map((option, index) => {
+            const isSelected = answer && answer.index === index;
+            const stateClass = answer
+              ? option.correct ? 'correct' : isSelected ? 'incorrect' : 'muted'
+              : '';
+            return `
+              <button class="game-option ${stateClass}" ${answer ? 'disabled' : ''} onclick="answerGame(${index})">
+                <span class="game-option-letter">${String.fromCharCode(65 + index)}</span>
+                <span>${escapeHtml(option.label)}</span>
+                ${answer && option.correct ? '<span aria-label="Resposta correta">✓</span>' : ''}
+              </button>
+            `;
+          }).join('')}
+        </div>
+      </article>
+
+      ${answer ? `
+        <div class="game-feedback ${answer.correct ? 'is-correct' : 'is-incorrect'}" role="status">
+          <strong>${answer.correct ? '✅ Mandou bem!' : '🔎 Pista revelada!'}</strong>
+          <p>${answer.correct ? escapeHtml(round.explanation) : `A resposta correta era “${escapeHtml(round.correctLabel)}”. ${escapeHtml(round.explanation)}`}</p>
+          <button class="game-start-btn" onclick="nextGameRound()">
+            ${d.gameIndex === total - 1 ? 'Ver resultado' : 'Próximo caso'} <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      ` : ''}
+      <button class="game-exit-btn" onclick="goHome()">← Sair do jogo</button>
+    </section>
+  `;
+}
+
+function answerGame(optionIndex) {
+  const rounds = getGameRounds();
+  const round = rounds[runtime.data.gameIndex];
+  if (!round || runtime.data.gameAnswers[runtime.data.gameIndex]) return;
+
+  const selected = round.options[optionIndex];
+  if (!selected) return;
+
+  const correct = selected.correct;
+  runtime.data.gameAnswers[runtime.data.gameIndex] = { index: optionIndex, correct };
+  if (correct) {
+    runtime.data.gameScore += 100 + runtime.data.gameStreak * 25;
+    runtime.data.gameStreak += 1;
+  } else {
+    runtime.data.gameStreak = 0;
+  }
+  saveState();
+  render();
+}
+
+function nextGameRound() {
+  runtime.data.gameIndex += 1;
+  saveState();
+  render();
 }
 
 /* ==================== BARRA DA DUPLA & PROGRESSO ==================== */
